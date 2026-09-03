@@ -1,0 +1,36 @@
+__pycache__/
+*.py[cod]
+*.so
+*.o
+*.log
+logs/
+outputs/
+test_videos/
+benchmark_videos/
+.torch_extensions*/
+vdm_infer/kernels/.torch_extensions_vdm_w4a4/
+
+# Generated media and benchmark artifacts
+*.mp4
+*.gif
+*.png
+*.jpg
+*.jpeg
+videos/
+packed_repro_videos/
+
+# Model weights and checkpoints
+*.pt
+*.pth
+*.safetensors
+*.distcp
+.metadata
+checkpoint/
+checkpoints/
+!vdm_infer/checkpoints/
+!vdm_infer/checkpoints/*.py
+
+# Local/editor artifacts
+.DS_Store
+.idea/
+.vscode/

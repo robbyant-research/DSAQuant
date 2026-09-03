@@ -1,0 +1,17 @@
+torch==2.9.0+cu126
+torchvision==0.24.0+cu126
+diffusers==0.36.0.dev0
+transformers==4.57.1
+accelerate==1.10.1
+safetensors==0.6.2
+numpy==2.2.6
+einops==0.8.1
+pillow==11.3.0
+imageio==2.37.0
+imageio-ffmpeg==0.6.0
+tqdm==4.67.3
+typing_extensions==4.15.0
+flash_attn_3==3.0.0b1
+sageattention==2.2.0
+ninja==1.13.0
+packaging==26.2
