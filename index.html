@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="DSAQuant — Denoising-Stage-Aligned Quantization-Aware Training for high-fidelity video generation.">
+  <meta name="theme-color" content="#555fff">
+  <title>DSAQuant — Stage-Aligned Quantization for Video Generation</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header" data-header>
+    <div class="nav-shell">
+      <a class="brand" href="#top" aria-label="DSAQuant home">
+        <span class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span>DSAQuant</span>
+      </a>
+
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+        <span class="sr-only">Toggle navigation</span>
+        <span></span><span></span>
+      </button>
+
+      <nav id="primary-nav" class="primary-nav" aria-label="Primary navigation">
+        <a href="#results">Results</a>
+        <a href="#motivation">Motivation</a>
+        <a href="#method">Method</a>
+        <a href="#comparisons">Comparisons</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="top" class="hero">
+      <div class="hero-aura hero-aura-one" aria-hidden="true"></div>
+      <div class="hero-aura hero-aura-two" aria-hidden="true"></div>
+      <div class="shell hero-copy">
+        <h1 class="reveal">
+          <span class="title-product">DSAQuant</span>
+          <span class="title-description">Denoising-Stage-Aligned Quantization-Aware Training for Video Generation</span>
+        </h1>
+
+        <div id="paper-authors" class="authors reveal" aria-label="Paper authors"></div>
+        <div id="paper-affiliations" class="affiliations reveal" aria-label="Author affiliations"></div>
+        <div id="paper-author-notes" class="author-notes reveal"></div>
+
+        <p class="hero-lede reveal">
+          Preserve the structure. Recover the detail. Train quantized video diffusion models in alignment with the distinct role of each denoising stage.
+        </p>
+
+        <div class="hero-actions reveal">
+          <span class="button button-secondary button-disabled" aria-disabled="true" title="The arXiv link will be added after the paper is uploaded">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 2.8h6l3 3v11.4H5.5zM11.5 2.8v3h3M8 10h4M8 13h4"/></svg>
+            Paper
+            <span class="button-note">Coming soon</span>
+          </span>
+          <a class="button button-primary" href="https://github.com/robbyant-research/DSAQuant" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 6 3 10l4 4M13 6l4 4-4 4M11.5 4.5l-3 11"/></svg>
+            Code
+          </a>
+          <a class="button button-secondary" href="https://huggingface.co/Robbyant-Research/DSAQuant" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6.2 10 3l6 3.2v7.6L10 17l-6-3.2zM4 6.2l6 3.3 6-3.3M10 9.5V17"/></svg>
+            Model
+          </a>
+        </div>
+      </div>
+
+      <div class="shell metric-strip reveal" aria-label="DSAQuant key features">
+        <article>
+          <h3>Simplicity</h3>
+          <p><strong>Minimal changes.</strong> Integrates quickly with existing training and inference pipelines.</p>
+        </article>
+        <article>
+          <h3>Generality</h3>
+          <p><strong>Across models and scales.</strong> Works across Wan and CogVideoX at multiple sizes and resolutions.</p>
+        </article>
+        <article>
+          <h3>Effectiveness</h3>
+          <p><strong>Stable gains.</strong> Averaging +2.22 VBench at INT4 and +3.34 at INT3.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="motivation" class="section section-soft">
+      <div class="shell section-heading reveal">
+        <span class="section-index">02 / Motivation</span>
+        <h2>Quantization errors are stage-dependent</h2>
+        <p>Conventional QAT does not fail uniformly: early-stage perturbations are relatively mild, while late errors destroy detail and texture.</p>
+      </div>
+
+      <div class="shell motivation-story">
+        <article class="motivation-block motivation-block-failure reveal">
+          <div class="motivation-copy motivation-challenge-head">
+            <span class="motivation-kicker">Observation 01 · Conventional QAT</span>
+            <h3>Challenges of conventional QAT</h3>
+          </div>
+
+          <div class="challenge-layout">
+            <div class="challenge-reference">
+              <figure class="motivation-figure">
+                <div class="motivation-crop">
+                  <img src="assets/figures/moti1.png" alt="Full-precision video frames used as the visual reference">
+                </div>
+                <figcaption>Full-precision reference.</figcaption>
+              </figure>
+
+              <div class="challenge-note">
+                <p>Uniform QAT retains the scene composition and temporal motion, but fails to recover high-frequency appearance and texture.</p>
+                <div class="failure-summary" aria-label="Layout and motion are preserved while appearance and texture are degraded">
+                  <span class="failure-kept"><i aria-hidden="true">✓</i><small>Preserved</small>Structure &amp; motion</span>
+                  <span class="failure-lost"><i aria-hidden="true">×</i><small>Degraded</small>Appearance &amp; texture</span>
+                </div>
+              </div>
+            </div>
+
+            <figure class="motivation-figure motivation-figure-qat">
+              <div class="motivation-crop">
+                <img src="assets/figures/moti2.png" alt="Conventional QAT results with preserved structure but degraded appearance and texture">
+              </div>
+              <figcaption>Failure mode of conventional quantization-aware training.</figcaption>
+            </figure>
+          </div>
+        </article>
+
+        <article class="motivation-block motivation-block-stages reveal">
+          <div class="motivation-stage-head">
+            <div class="motivation-copy">
+              <span class="motivation-kicker">Observation 02 · Stage-wise analysis</span>
+              <h3>Where quantization happens matters.</h3>
+              <p>The same perturbation has sharply different effects along the denoising trajectory.</p>
+            </div>
+
+            <div class="stage-findings">
+              <article>
+                <span>Early steps</span>
+                <strong>Limited impact</strong>
+                <p>Slight layout changes, while overall visual quality remains high.</p>
+              </article>
+              <article class="stage-finding-critical">
+                <span>Late steps</span>
+                <strong>Severe degradation</strong>
+                <p>Visible artifacts emerge and fine detail breaks down.</p>
+              </article>
+            </div>
+          </div>
+
+          <figure class="motivation-figure motivation-figure-right">
+            <div class="motivation-crop">
+              <img src="assets/figures/moti3.png" alt="Stage-wise comparison showing mild impact from early-step quantization and severe degradation from late-step quantization">
+            </div>
+            <figcaption>Quantization errors affect different denoising stages differently.</figcaption>
+          </figure>
+        </article>
+
+      </div>
+    </section>
+
+    <section id="method" class="section section-white">
+      <div class="shell section-heading reveal">
+        <span class="section-index">03 / Method</span>
+        <h2>One principle, applied twice</h2>
+        <p>Quantized video diffusion models should be trained according to the role of each denoising stage.</p>
+      </div>
+
+      <div class="shell method-layout">
+        <div class="method-list">
+          <article class="method-card reveal">
+            <div class="method-card-top">
+              <span class="method-icon" aria-hidden="true">S</span>
+              <span class="method-phase">Training</span>
+            </div>
+            <h3>Denoising-Stage Oriented Supervision</h3>
+            <p>Teacher anchoring stabilizes early structure, then smoothly yields to the native target loss so late stages can reconstruct detail.</p>
+            <div class="method-timeline supervision-timeline" aria-label="Teacher anchoring decreases while target learning increases from early to late denoising steps">
+              <div class="timeline-axis"><span>Early steps</span><span>Denoising</span><span>Late steps</span></div>
+              <div class="timeline-lane">
+                <span>Teacher anchoring</span>
+                <i class="timeline-bar teacher-bar"></i>
+              </div>
+              <div class="timeline-lane">
+                <span>Target learning</span>
+                <i class="timeline-bar target-bar"></i>
+              </div>
+            </div>
+          </article>
+
+          <article class="method-card reveal">
+            <div class="method-card-top">
+              <span class="method-icon" aria-hidden="true">G</span>
+              <span class="method-phase">Inference</span>
+            </div>
+            <h3>Denoising-Stage Gated Guidance</h3>
+            <p>Classifier-free guidance is gated near the end of denoising, preventing conditional mismatch from amplifying quantization noise.</p>
+            <div class="method-timeline guidance-timeline" aria-label="Classifier-free guidance is active in early denoising steps and gated in late steps">
+              <div class="timeline-axis"><span>Early steps</span><span>Denoising</span><span>Late steps</span></div>
+              <div class="guidance-phases">
+                <span class="guidance-active"><b>CFG Active</b></span>
+                <span class="guidance-gated"><b>CFG Drop</b></span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <figure class="method-figure reveal">
+          <div class="figure-header">
+            <span>DSAQuant framework</span>
+            <span>Figure 02</span>
+          </div>
+          <div class="figure-canvas">
+            <img src="assets/figures/method.png" alt="Overview of the DSAQuant training and inference framework">
+          </div>
+          <figcaption>Stage-oriented supervision during training and gated guidance during inference.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="results" class="section section-dark">
+      <div class="shell section-heading section-heading-light reveal">
+        <span class="section-index">01 / Results</span>
+        <h2>Low precision, high quality.</h2>
+        <p>Explore eighteen INT4 DSAQuant outputs across three Wan model scales. Each collection cycles automatically between two groups of three samples.</p>
+      </div>
+
+      <div class="shell result-collections reveal">
+        <section class="result-carousel" data-result-carousel aria-labelledby="result-wan13b">
+          <div class="result-carousel-head">
+            <div class="result-model-title">
+              <span>01</span>
+              <div>
+                <h3 id="result-wan13b">Wan 1.3B</h3>
+                <p>6 samples · INT4 DSAQuant</p>
+              </div>
+            </div>
+            <div class="carousel-controls">
+              <button type="button" data-carousel-direction="-1" aria-label="Previous Wan 1.3B videos">&#8249;</button>
+              <button type="button" data-carousel-direction="1" aria-label="Next Wan 1.3B videos">&#8250;</button>
+            </div>
+          </div>
+          <div class="result-viewport" tabindex="0" aria-label="Wan 1.3B result videos">
+            <div class="result-track">
+              <figure class="result-card"><video src="videos/showcase/wan_1_3b/seine_van_gogh.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Seine in Van Gogh style</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_1_3b/panda_guitar_campfire.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Panda by the campfire</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_1_3b/stormtrooper_beach.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Stormtrooper on the beach</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_1_3b/vase_zoom_out.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Vase, zoom out</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_1_3b/teddy_bear_swimming.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Teddy bear swimming</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_1_3b/jellyfish.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Jellyfish ocean</figcaption></figure>
+            </div>
+          </div>
+        </section>
+
+        <section class="result-carousel" data-result-carousel aria-labelledby="result-wan5b">
+          <div class="result-carousel-head">
+            <div class="result-model-title">
+              <span>02</span>
+              <div>
+                <h3 id="result-wan5b">Wan 2.2 5B</h3>
+                <p>6 samples · INT4 DSAQuant</p>
+              </div>
+            </div>
+            <div class="carousel-controls">
+              <button type="button" data-carousel-direction="-1" aria-label="Previous Wan 2.2 5B videos">&#8249;</button>
+              <button type="button" data-carousel-direction="1" aria-label="Next Wan 2.2 5B videos">&#8250;</button>
+            </div>
+          </div>
+          <div class="result-viewport" tabindex="0" aria-label="Wan 2.2 5B result videos">
+            <div class="result-track">
+              <figure class="result-card"><video src="videos/showcase/wan_2_2_5b/christmas_fireworks.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Christmas fireworks</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_2_2_5b/fantasy_rabbit.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Fantasy rabbit</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_2_2_5b/panda_swing.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Panda on a swing</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_2_2_5b/raccoon_guitar.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Raccoon guitarist</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_2_2_5b/fantasy_flythrough.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Fantasy flythrough</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_2_2_5b/bicycle.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Bicycle ride</figcaption></figure>
+            </div>
+          </div>
+        </section>
+
+        <section class="result-carousel" data-result-carousel aria-labelledby="result-wan14b">
+          <div class="result-carousel-head">
+            <div class="result-model-title">
+              <span>03</span>
+              <div>
+                <h3 id="result-wan14b">Wan 2.1 14B</h3>
+                <p>6 samples · INT4 DSAQuant</p>
+              </div>
+            </div>
+            <div class="carousel-controls">
+              <button type="button" data-carousel-direction="-1" aria-label="Previous Wan 2.1 14B videos">&#8249;</button>
+              <button type="button" data-carousel-direction="1" aria-label="Next Wan 2.1 14B videos">&#8250;</button>
+            </div>
+          </div>
+          <div class="result-viewport" tabindex="0" aria-label="Wan 2.1 14B result videos">
+            <div class="result-track">
+              <figure class="result-card"><video src="videos/showcase/wan_2_1_14b/mountain_road_car.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Mountain road</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_2_1_14b/dog_couch.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Dog jumps onto couch</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_2_1_14b/garden_zoom_out.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Garden, zoom out</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_2_1_14b/pouring_tea.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Pouring tea</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_2_1_14b/handshake.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Handshake</figcaption></figure>
+              <figure class="result-card"><video src="videos/showcase/wan_2_1_14b/makeup.mp4" autoplay loop muted playsinline preload="metadata"></video><figcaption>Morning makeup</figcaption></figure>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="comparisons" class="section section-soft comparison-section">
+      <div class="shell section-heading reveal">
+        <span class="section-index">04 / Comparisons</span>
+        <h2>Inspect every comparison</h2>
+        <p>Switch between system-level comparisons and ablations, then choose a model family.</p>
+      </div>
+
+      <div class="shell explorer reveal">
+        <div class="explorer-topbar">
+          <div id="section-tabs" class="segmented" role="tablist" aria-label="Comparison sections"></div>
+          <span class="explorer-hint">All videos are muted and looped</span>
+        </div>
+        <div id="model-tabs" class="model-tabs" role="tablist" aria-label="Model families"></div>
+        <div id="comparison-gallery" class="comparison-gallery" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="acknowledgements" class="acknowledgements-section">
+      <div class="shell acknowledgements-inner reveal">
+        <span class="section-index">Acknowledgements</span>
+        <p>We would like to thank Yichong Lu, Jiahao Wang, Yufeng Yuan, Nan Zhou, Jiahao Shao, and Yudong Jin for their insightful discussions.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div>
+        <a class="brand brand-footer" href="#top">
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span>DSAQuant</span>
+        </a>
+        <p>Denoising-stage-aligned low-precision video generation.</p>
+      </div>
+      <div class="footer-meta">
+        <span>Project page</span>
+        <span>Robby Ant · Zhejiang University · ETH</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
