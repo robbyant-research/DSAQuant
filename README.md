@@ -2,7 +2,7 @@
 
 **DSAQuant: Denoising-Stage-Aligned Quantization-Aware Training for Video Generation**
 
-**Paper: Coming soon** | [**Project Page**](https://robbyant-research.github.io/DSAQuant/) | [**Model Page**](https://huggingface.co/Robbyant-Research/DSAQuant)
+[**Paper**](https://arxiv.org/abs/2609.04031) | [**Project Page**](https://robbyant-research.github.io/DSAQuant/) | [**Model Page**](https://huggingface.co/Robbyant-Research/DSAQuant)
 
 Shuaiting Li [1,2], Zelin Gao [1,4], Haibin Shen [2], Yujun Shen [1], Haotong Qin<sup>†</sup> [3], Yinghao Xu<sup>†</sup> [4,1]
 
